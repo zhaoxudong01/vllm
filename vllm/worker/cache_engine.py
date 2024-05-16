@@ -113,13 +113,14 @@ class CacheEngine:
         parallel_config: ParallelConfig,
     ) -> int:
         num_heads = model_config.get_num_kv_heads(parallel_config)
+        total_num_heads = model_config.hf_config.num_attention_heads
         try:
-            head_size = model_config.hf_config.attention_projection_size // num_heads
+            attn_head_size = model_config.hf_config.attention_projection_size // total_num_heads
         except:
-            head_size = model_config.get_head_size()
+            attn_head_size = model_config.hf_config.hidden_size // total_num_heads
         num_layers = model_config.get_num_layers(parallel_config)
 
-        key_cache_block = cache_config.block_size * num_heads * head_size
+        key_cache_block = cache_config.block_size * num_heads * attn_head_size
         value_cache_block = key_cache_block
         total = num_layers * (key_cache_block + value_cache_block)
         if cache_config.cache_dtype == "auto":
